@@ -5,7 +5,7 @@ from pyvis.network import Network
 
 # Import Data
 handle = "jfreyberg/spotify-artist-feature-collaboration-network"
-dataset_path = kagglehub.dataset_download(handle) # download the whole dataset
+dataset_path = kagglehub.dataset_download(handle, force_download=True) # download the whole dataset
 
 nodes_path = os.path.join(dataset_path, "nodes.csv") # inner path to nodes.csv
 edges_path = os.path.join(dataset_path, "edges.csv") # inner path to edges.csv
