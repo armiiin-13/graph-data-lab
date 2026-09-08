@@ -17,7 +17,9 @@ FINAL_COLUMNS = [
     "id_lastfm",
     "artist_name",
     "listeners",
+    "popularity",
     "genres",
+    "start_date",
     "language",
 ]
 
@@ -37,9 +39,11 @@ def read_artists_txt(filepath):
                 continue
 
             language = row[1].strip() if len(row) > 1 else None
+            start_date = row[2].strip() if len(row) > 2 else None
 
             artists.append({
                 "artist_name": artist_name,
+                "start_date": start_date,
                 "language": language,
             })
 
@@ -65,7 +69,9 @@ def combine_artist_data(spotify_data, lastfm_data, artist_input):
         "id_lastfm": lastfm_data.get("id_lastfm"),
         "artist_name": artist_name,
         "listeners": lastfm_data.get("listeners"),
+        "popularity": spotify_data.get("popularity"),
         "genres": genres,
+        "start_date": artist_input.get("start_date"),
         "language": artist_input.get("language"),
     }
 
@@ -106,6 +112,8 @@ def export():
                 "id_lastfm": None,
                 "artist_name_lastfm": None,
                 "listeners": None,
+                "popularity": None,
+                "start_date": None,
                 "tags": [],
             }
 

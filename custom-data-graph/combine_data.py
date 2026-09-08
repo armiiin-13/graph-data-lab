@@ -8,6 +8,8 @@ def combine_artist_data(spotify_data, lastfm_data, artist_input):
             or lastfm_data.get("artist_name_lastfm")
             or artist_input.get("artist_name"),
         "listeners": lastfm_data.get("listeners"),
+        "popularity": spotify_data.get("popularity"),
         "genres": ", ".join(tags),
+        "start_date": artist_input.get("start_date"),
         "language": artist_input.get("language"),
     }

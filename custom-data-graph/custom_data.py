@@ -3,6 +3,8 @@ import re
 import pandas as pd
 from pyvis.network import Network
 
+from genre_utils import genre_similarities_value
+
 # Import data
 df = pd.read_csv("output/artists.csv")
 
@@ -38,37 +40,50 @@ def genres_to_set(value):
 
 df["artist_name"] = df["artist_name"].apply(normalize_text)
 df['genres'] = df['genres'].apply(genres_to_set)
+df['start_date'] = df['start_date'].astype(int)
 
 # Establish edges
     ## Edges are established if the similarity between two artists is higher than a threshold
-    ## There are two types of connections: strongly connected artists (red) and related artists (gray)
     ## The edge label shows the shared genres between both artists
 
-CONNECTION_THRESHOLD = 3.0
+CONNECTION_THRESHOLD = 3
+BRIDGE_THRESHOLD = 1.3
 
 class Edge:
-    STRONG_CONNECTION_THRESHOLD = 4.0
-
     def __init__(self, node_1, node_2, genres, value):
         self.node_1 = node_1
         self.node_2 = node_2
         self.genres = genres
-        if value < Edge.STRONG_CONNECTION_THRESHOLD:
+
+        if value < CONNECTION_THRESHOLD:
             self.color = "gray"
         else:
             self.color = "red"
 
 def connection(node_1, node_2):
+    # Genre Similarity
     genre_intersection = node_1['genres'].intersection(node_2['genres'])
-    equal_language = node_1['language'] == node_2['language']
+    genre_score = genre_similarities_value(node_1['genres'], node_2['genres'])
+    value = genre_score
 
-    value = 1 if equal_language else 0
-    value += len(genre_intersection)
+    with open("output/genre_similarity", "a", encoding="utf-8") as file:
+        file.write(str(node_1['artist_name']) + ", " + str(node_2['artist_name']) + " -> " + str(value) + "\n")
 
-    if value < CONNECTION_THRESHOLD:
+    if value != 0:
+        # Language Similarity
+        equal_language = node_1['language'] == node_2['language']
+        value += 0.5 if equal_language else 0
+
+        # Time Similarity
+        time_gap = node_1['start_date'] - node_2['start_date']
+        if abs(time_gap) <= 5:
+            value += 0.5
+
+    if genre_score < BRIDGE_THRESHOLD: # genre_score always will be <= value
         return None
     else:
         return Edge(node_1['artist_name'], node_2['artist_name'], ','.join(genre_intersection), value)
+
 
 edges = []
 
@@ -126,17 +141,14 @@ for i in range(len(df)):
         size=15
     )
 
-VISIBLE_EDGE_COLOR = "gray"
-
 for edge in edges:
-    if edge.color == "red":
-        nt.add_edge(
-            edge.node_1,
-            edge.node_2,
-            color=VISIBLE_EDGE_COLOR,
-            physics=True,
-            width=1
-        )
+    nt.add_edge(
+        edge.node_1,
+        edge.node_2,
+        color=edge.color,
+        physics=True,
+        width=1
+    )
 
 nt.set_options("""
 var options = {
